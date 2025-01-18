@@ -10,9 +10,11 @@ declare module 'vue' {
     AButton: typeof import('@arco-design/web-vue')['Button']
     ACol: typeof import('@arco-design/web-vue')['Col']
     AInput: typeof import('@arco-design/web-vue')['Input']
+    AInputNumber: typeof import('@arco-design/web-vue')['InputNumber']
     ARow: typeof import('@arco-design/web-vue')['Row']
     ASlider: typeof import('@arco-design/web-vue')['Slider']
     ASpace: typeof import('@arco-design/web-vue')['Space']
     ATable: typeof import('@arco-design/web-vue')['Table']
+    ATooltip: typeof import('@arco-design/web-vue')['Tooltip']
   }
 }

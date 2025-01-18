@@ -134,22 +134,28 @@ const fetchClipboardData = async () => {
                 <a-row justify="space-between" align="center">
                     <a-col :span="5">
                         <a-space align="start" size="mini">
-                            <a-button type="outline" @click="handleAdd"
-                                ><template #icon><icon-plus /></template
-                            ></a-button>
-                            <a-button
-                                type="outline"
-                                @click="fetchClipboardData"
-                            >
-                                <template #icon><icon-import /></template>
-                            </a-button>
-                            <a-button
-                                type="outline"
-                                status="danger"
-                                :disabled="selectedKeys.length === 0"
-                                @click="handleDel(selectedKeys)"
-                                ><template #icon><icon-delete /></template
-                            ></a-button>
+                            <a-tooltip content="添加" mini>
+                                <a-button type="outline" @click="handleAdd"
+                                    ><template #icon><icon-plus /></template
+                                ></a-button>
+                            </a-tooltip>
+                            <a-tooltip content="从剪贴板导入" mini>
+                                <a-button
+                                    type="outline"
+                                    @click="fetchClipboardData"
+                                >
+                                    <template #icon><icon-import /></template>
+                                </a-button>
+                            </a-tooltip>
+                            <a-tooltip content="删除" mini>
+                                <a-button
+                                    type="outline"
+                                    status="danger"
+                                    :disabled="selectedKeys.length === 0"
+                                    @click="handleDel(selectedKeys)"
+                                    ><template #icon><icon-delete /></template
+                                ></a-button>
+                            </a-tooltip>
                         </a-space>
                     </a-col>
                     <a-col :span="5">
@@ -159,6 +165,9 @@ const fetchClipboardData = async () => {
                             :max="maxValue"
                             style="display: inline-flex"
                             :disabled="slide_disabled"
+                            :format-tooltip="
+                                (value: number) => `目标灰度值：${value}`
+                            "
                         />
                     </a-col>
                 </a-row>
@@ -177,20 +186,18 @@ const fetchClipboardData = async () => {
                             :row-selection="rowSelection"
                             v-model:selectedKeys="selectedKeys"
                         >
-                            <!-- <template #name="{ record }">
-                                <a-input
-                                    v-model="record.name"
-                                    style="width: 100px"
-                                />
-                            </template> -->
                             <template #volumn="{ record }">
-                                <a-input
+                                <a-input-number
                                     v-model="record.volumn"
+                                    :hide-button="true"
                                     style="width: 100px"
                                 />
                             </template>
                             <template #value="{ record }">
-                                <a-input v-model="record.value" />
+                                <a-input-number
+                                    v-model="record.value"
+                                    :hide-button="true"
+                                />
                             </template>
                         </a-table>
                     </a-col>
