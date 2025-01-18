@@ -165,7 +165,9 @@ const fetchClipboardData = async () => {
                             :max="maxValue"
                             style="display: inline-flex"
                             :disabled="slide_disabled"
-                            :format-tooltip="(value) => `目标灰度值：${value}`"
+                            :format-tooltip="
+                                (value: number) => `目标灰度值：${value}`
+                            "
                         />
                     </a-col>
                 </a-row>
