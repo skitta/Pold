@@ -3,27 +3,26 @@ use tauri::AppHandle;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 #[derive(serde::Serialize)]
-struct ClipboardData {
-    key: String,
-    name: String,
+struct ClipboardData<'a> {
+    key: &'a str,
+    name: &'a str,
     volumn: u8,
     value: f64,
 }
 
 #[tauri::command]
-async fn read_clipboard(app: AppHandle) -> Result<String, String> {
+fn read_clipboard(app: AppHandle) -> Result<String, String> {
     let content = app.clipboard().read_text().map_err(|e| e.to_string())?;
     let parse_data: Vec<ClipboardData> = content
         .lines()
         .filter_map(|line| {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() == 2 {
-                let key = parts[0].to_string();
-                let name = parts[0].to_string();
+                let key = parts[0];
                 let value = parts[1].parse::<f64>().ok()?;
                 Some(ClipboardData {
                     key,
-                    name,
+                    name: key,
                     volumn: 0,
                     value,
                 })
