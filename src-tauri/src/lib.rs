@@ -31,13 +31,16 @@ fn read_clipboard(app: AppHandle) -> Result<String, String> {
             }
         })
         .collect();
+    // todo: 处理读取错误
+    if parse_data.is_empty() {
+        return Err("No valid data found in clipboard".to_string());
+    }
     serde_json::to_string(&parse_data).map_err(|e| e.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .invoke_handler(tauri::generate_handler![read_clipboard])
         .run(tauri::generate_context!())

@@ -111,7 +111,7 @@ const handleDel = (keys: string[]) => {
 const fetchClipboardData = async () => {
     try {
         const resp = await invoke<string>("read_clipboard");
-        console.log(resp);
+        // console.log(resp);
         data.value = JSON.parse(resp) as TableData[];
     } catch (error) {
         console.log("read clipboard with error:", error);
@@ -210,6 +210,7 @@ const handleHelp = () => {
                                 <a-input-number
                                     v-model="record.value"
                                     :hide-button="true"
+                                    style="width: 110px"
                                 />
                             </template>
                         </a-table>
