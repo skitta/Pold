@@ -40,9 +40,10 @@ router.beforeEach((to, from) => {
 }
 
 .container {
+    height: 100vh;
     margin: 0;
-    padding-top: 10vh;
-    padding-bottom: 5vh;
+    /* padding-top: 10vh; */
+    /* padding-bottom: 5vh; */
     display: flex;
     flex-direction: column;
     /* justify-content: center; */

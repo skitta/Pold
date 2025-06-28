@@ -1,48 +1,48 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use tauri::AppHandle;
-use tauri_plugin_clipboard_manager::ClipboardExt;
+mod commands;
+mod input;
+mod record;
+mod state;
 
-#[derive(serde::Serialize)]
-struct ClipboardData<'a> {
-    key: &'a str,
-    name: &'a str,
-    volumn: u8,
-    value: f64,
-}
-
-#[tauri::command]
-fn read_clipboard(app: AppHandle) -> Result<String, String> {
-    let content = app.clipboard().read_text().map_err(|e| e.to_string())?;
-    let parse_data: Vec<ClipboardData> = content
-        .lines()
-        .filter_map(|line| {
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() == 2 {
-                let key = parts[0];
-                let value = parts[1].parse::<f64>().ok()?;
-                Some(ClipboardData {
-                    key,
-                    name: key,
-                    volumn: 0,
-                    value,
-                })
-            } else {
-                None
-            }
-        })
-        .collect();
-    // todo: 处理读取错误
-    if parse_data.is_empty() {
-        return Err("No valid data found in clipboard".to_string());
-    }
-    serde_json::to_string(&parse_data).map_err(|e| e.to_string())
-}
+use commands::*;
+use input::InputData;
+use state::AppState;
+use std::sync::Mutex;
+use tauri::{Builder, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
-        .invoke_handler(tauri::generate_handler![read_clipboard])
+        .plugin(tauri_plugin_store::Builder::default().build())
+        .setup(|app| {
+            let handle = app.handle();
+            let state = AppState::load_from_store(handle)?;
+            app.manage(Mutex::new(state));
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            create_record,
+            read_clipboard,
+            calc_loading_volumn,
+            update_loading_volumn,
+            get_record,
+            get_history,
+            clear_history
+        ])
+        .on_window_event(|window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                api.prevent_close();
+                let handle = window.app_handle();
+                let state = handle.state::<Mutex<AppState>>();
+                let state_guard = state.lock().unwrap();
+                if let Err(e) = state_guard.save_to_store(handle) {
+                    eprintln!("Failed to save state before closing: {}", e);
+                }
+                handle.exit(0);
+            }
+            _ => {}
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
