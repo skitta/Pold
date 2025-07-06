@@ -9,6 +9,7 @@ import TableView from "@/components/TableView.vue";
 const selectedMenuIndex = ref(["0"]);
 const menuItems = ref<string[]>([]);
 const disableCreate = ref(false);
+const hoverIndex = ref(-1);
 
 useTauriEvent<string[]>("history", (e) => {
     menuItems.value = e;
@@ -29,8 +30,8 @@ const handleCompleted = () => {
     disableCreate.value = false;
 };
 
-const handleClear = () => {
-    invoke("clear_history");
+const handleDelete = (index: number) => {
+    invoke("delete_history", { index });
     disableCreate.value = false;
 };
 
@@ -71,21 +72,27 @@ const handleHelp = () => {
                 <a-menu-item
                     v-for="(item, index) in menuItems"
                     :key="index.toString()"
+                    @mouseenter="hoverIndex = index"
+                    @mouseleave="hoverIndex = -1"
                 >
-                    {{ item }}
+                    <!-- 鼠标悬停时在右侧出现删除按钮 -->
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">{{ item }}</div>
+                        <a-button
+                            v-show="hoverIndex === index"
+                            type="text"
+                            size="small"
+                            status="danger"
+                            class="delete-btn"
+                            @click.stop="handleDelete(index)"
+                        >
+                            <template #icon>
+                                <icon-delete />
+                            </template>
+                        </a-button>
+                    </div>
                 </a-menu-item>
             </a-menu>
-            <div class="sider-button">
-                <a-button
-                    type="dashed"
-                    status="danger"
-                    @click="handleClear"
-                    long
-                    :disabled="menuItems.length === 0"
-                >
-                    清除所有记录
-                </a-button>
-            </div>
         </a-layout-sider>
 
         <a-layout>
@@ -144,7 +151,40 @@ const handleHelp = () => {
     flex-grow: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    height: calc(100vh - 184px);
+    height: calc(100vh - 116px);
+}
+
+.menu-item-content {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.menu-item-title {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.2s ease;
+}
+
+.delete-btn {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.arco-menu .arco-menu-item .arco-icon {
+  margin-right: 0;
+}
+
+.arco-menu-item.arco-menu-selected .arco-icon,
+.arco-menu-item:hover .arco-icon {
+  color: var(--danger-6);
+}
+
+.arco-menu-item:hover .delete-btn {
+  opacity: 1;
 }
 
 .layout :deep(.arco-layout-sider) .logo {

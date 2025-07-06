@@ -1,9 +1,9 @@
 use crate::InputData;
-use chrono::{TimeZone, Utc};
+use chrono::{TimeZone, Local};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Record {
-    id: u64,
+    id: i64,
     inputs: Vec<InputData>,
     min_value: Option<u64>,
     max_value: Option<u64>,
@@ -13,7 +13,7 @@ pub struct Record {
 impl Default for Record {
     fn default() -> Self {
         Self {
-            id: Utc::now().timestamp_millis() as u64,
+            id: Local::now().timestamp_millis(),
             inputs: Vec::new(),
             min_value: None,
             max_value: None,
@@ -44,7 +44,7 @@ impl Record {
     }
 
     pub fn get_display_name(&self) -> String {
-        let dt = Utc.timestamp_millis_opt(self.id as i64).unwrap();
+        let dt = Local.timestamp_millis_opt(self.id).unwrap();
         dt.format("%Y-%m-%d %H:%M:%S").to_string()
     }
 }

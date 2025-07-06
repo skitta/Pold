@@ -73,6 +73,21 @@ pub fn get_history(app: AppHandle, state: State<'_, Mutex<AppState>>) {
 }
 
 #[tauri::command]
+pub fn delete_history(
+    app: AppHandle,
+    state: State<'_, Mutex<AppState>>,
+    index: usize,
+) {
+    let mut state = state.lock().unwrap();
+    if state.delete_history(index) {
+        state.send_history_list(&app);
+        state.send_current_record(&app);
+    } else {
+        eprintln!("Failed to delete history at index {}", index);
+    }
+}
+
+#[tauri::command]
 pub fn clear_history(app: AppHandle, state: State<'_, Mutex<AppState>>) {
     let mut state = state.lock().unwrap();
     state.clear_history(&app);

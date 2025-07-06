@@ -15,6 +15,7 @@ pub fn run() {
     Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_prevent_default::debug())
         .setup(|app| {
             let handle = app.handle();
             let state = AppState::load_from_store(handle)?;
@@ -28,7 +29,8 @@ pub fn run() {
             update_loading_volumn,
             get_record,
             get_history,
-            clear_history
+            clear_history,
+            delete_history
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

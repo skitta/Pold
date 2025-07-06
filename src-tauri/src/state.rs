@@ -59,6 +59,18 @@ impl AppState {
         app.emit("history", history).unwrap();
     }
 
+    pub fn delete_history(&mut self, index: usize) -> bool {
+        if index < self.record_history.len() {
+            self.record_history.remove(index);
+            if self.current_index.is_some() && self.current_index.unwrap() >= index {
+                self.current_index = Some(self.current_index.unwrap().saturating_sub(1));
+            }
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn clear_history(&mut self, app: &AppHandle) {
         self.record_history.clear();
         self.current_index = None;
