@@ -93,6 +93,22 @@ pub fn clear_history(app: AppHandle, state: State<'_, Mutex<AppState>>) {
     state.clear_history(&app);
 }
 
+#[tauri::command]
+pub fn rename_history(
+    app: AppHandle,
+    state: State<'_, Mutex<AppState>>,
+    index: usize,
+    name: String,
+) -> Result<(), String> {
+    let mut state = state.lock().unwrap();
+    if state.rename_record(index, name) {
+        state.send_history_list(&app);
+        Ok(())
+    } else {
+        Err(format!("Invalid index: {}", index))
+    }
+}
+
 // #[tauri::command]
 // async fn save_history(app: AppHandle, records: Vec<Record>) -> Result<String, String> {
 //     let store = app.store("history.json").map_err(|e| e.to_string())?;

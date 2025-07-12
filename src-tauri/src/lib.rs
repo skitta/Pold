@@ -30,7 +30,8 @@ pub fn run() {
             get_record,
             get_history,
             clear_history,
-            delete_history
+            delete_history,
+            rename_history
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

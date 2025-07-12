@@ -4,6 +4,7 @@ use chrono::{TimeZone, Local};
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Record {
     id: i64,
+    name: Option<String>,
     inputs: Vec<InputData>,
     min_value: Option<u64>,
     max_value: Option<u64>,
@@ -14,6 +15,7 @@ impl Default for Record {
     fn default() -> Self {
         Self {
             id: Local::now().timestamp_millis(),
+            name: None,
             inputs: Vec::new(),
             min_value: None,
             max_value: None,
@@ -44,8 +46,17 @@ impl Record {
     }
 
     pub fn get_display_name(&self) -> String {
-        let dt = Local.timestamp_millis_opt(self.id).unwrap();
-        dt.format("%Y-%m-%d %H:%M:%S").to_string()
+        match &self.name {
+            Some(name) => name.clone(),
+            None => {
+                let dt = Local.timestamp_millis_opt(self.id).unwrap();
+                dt.format("%Y-%m-%d %H:%M:%S").to_string()
+            }
+        }
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = Some(name);
     }
 }
 

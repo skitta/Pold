@@ -17,6 +17,8 @@ const selectedKeys = ref<string[]>([]);
 const target_value = ref(0);
 const minValue = ref(0);
 const maxValue = ref(0);
+const isCalculateDisabled = ref(true);
+const isLoadingRecord = ref(false);
 
 const slide_disabled = computed(() => {
     // The slider is disabled if no data exists or if every item's
@@ -29,14 +31,26 @@ const slide_disabled = computed(() => {
     return data.value.every((item) => !item.modified_volumn);
 });
 
+// Computed property for calculate button disabled state
+const calculateDisabled = computed(() => {
+    // Disable if no data or if manually disabled after successful calculation
+    return !data.value || data.value.length === 0 || isCalculateDisabled.value;
+});
+
 // The Tauri event listener is moved here to directly update the component's state.
 useTauriEvent<Record>("record", (e) => {
+    isLoadingRecord.value = true;
     data.value = e.inputs;
     target_value.value = e.target_value;
     minValue.value = e.min_value;
     maxValue.value = e.max_value;
-    // When a new record is loaded, reset selection and disable the slider.
+    // When a history record is loaded, reset selection and disable calculate button
     selectedKeys.value = [];
+    isCalculateDisabled.value = true;
+    // Use nextTick to ensure the state is properly set after data update
+    setTimeout(() => {
+        isLoadingRecord.value = false;
+    }, 0);
 });
 
 // Watch for changes in the recordIndex prop and fetch the corresponding record.
@@ -50,6 +64,19 @@ watch(
     { immediate: true },
 ); // 'immediate: true' ensures it runs on component mount.
 
+// Watch for changes in table data to enable calculate button
+watch(
+    () => data.value,
+    (_, oldData) => {
+        // Only enable calculate button when data changes if we're not loading a record
+        // and the change is not from loading a history record
+        if (!isLoadingRecord.value && oldData !== undefined) {
+            isCalculateDisabled.value = false;
+        }
+    },
+    { deep: true },
+);
+
 // All event handler logic is now part of the component itself.
 const handleAdd = () => {
     data.value.push({
@@ -59,6 +86,8 @@ const handleAdd = () => {
         value: 0,
         modified_volumn: 0,
     });
+    // Enable calculate button when new row is added
+    isCalculateDisabled.value = false;
 };
 
 const handleDel = () => {
@@ -66,6 +95,10 @@ const handleDel = () => {
         (item) => !selectedKeys.value.includes(item.key),
     );
     selectedKeys.value = [];
+    // Enable calculate button when rows are deleted (if data still exists)
+    if (data.value.length > 0) {
+        isCalculateDisabled.value = false;
+    }
 };
 
 const handleSubmit = async () => {
@@ -73,6 +106,8 @@ const handleSubmit = async () => {
         await invoke("calc_loading_volumn", {
             inputStr: JSON.stringify(data.value),
         });
+        // Disable calculate button after successful calculation
+        isCalculateDisabled.value = true;
         emit("completed");
     } catch (error) {
         console.log("calc_loading_volumn with error:", error);
@@ -80,6 +115,7 @@ const handleSubmit = async () => {
             title: "提交失败",
             content: "请确保数据格式正确",
         });
+        // Keep calculate button enabled on error
     }
 };
 
@@ -93,6 +129,8 @@ const fetchClipboardData = async () => {
     try {
         const resp = await invoke<string>("read_clipboard");
         data.value = JSON.parse(resp) as InputData[];
+        // Enable calculate button when data is imported
+        isCalculateDisabled.value = false;
     } catch (error) {
         console.log("read clipboard with error:", error);
         Modal.error({
@@ -199,6 +237,12 @@ const rowSelection: TableRowSelection = {
                         v-model:selectedKeys="selectedKeys"
                         style="width: 100%"
                     >
+                        <template #name="{ record }">
+                            <a-input
+                                v-model="record.name"
+                                style="width: 80px"
+                            />
+                        </template>
                         <template #volumn="{ record }">
                             <a-input-number
                                 v-model="record.volumn"
@@ -222,7 +266,7 @@ const rowSelection: TableRowSelection = {
                         type="primary"
                         long
                         @click="handleSubmit"
-                        :disabled="data.length === 0"
+                        :disabled="calculateDisabled"
                         >计算</a-button
                     >
                 </a-col>

@@ -10,6 +10,8 @@ const selectedMenuIndex = ref(["0"]);
 const menuItems = ref<string[]>([]);
 const disableCreate = ref(false);
 const hoverIndex = ref(-1);
+const editingIndex = ref(-1);
+const editingName = ref("");
 
 useTauriEvent<string[]>("history", (e) => {
     menuItems.value = e;
@@ -33,6 +35,31 @@ const handleCompleted = () => {
 const handleDelete = (index: number) => {
     invoke("delete_history", { index });
     disableCreate.value = false;
+};
+
+const handleRename = (index: number) => {
+    editingIndex.value = index;
+    editingName.value = menuItems.value[index];
+};
+
+const handleRenameSubmit = async (index: number) => {
+    if (editingName.value.trim()) {
+        try {
+            await invoke("rename_history", { 
+                index, 
+                name: editingName.value.trim() 
+            });
+            editingIndex.value = -1;
+            editingName.value = "";
+        } catch (error) {
+            console.error("Failed to rename history:", error);
+        }
+    }
+};
+
+const handleRenameCancel = () => {
+    editingIndex.value = -1;
+    editingName.value = "";
 };
 
 const handleMenuItemClick = (key: string) => {
@@ -75,21 +102,45 @@ const handleHelp = () => {
                     @mouseenter="hoverIndex = index"
                     @mouseleave="hoverIndex = -1"
                 >
-                    <!-- 鼠标悬停时在右侧出现删除按钮 -->
+                    <!-- 鼠标悬停时在右侧出现编辑和删除按钮 -->
                     <div class="menu-item-content">
-                        <div class="menu-item-title">{{ item }}</div>
-                        <a-button
-                            v-show="hoverIndex === index"
-                            type="text"
-                            size="small"
-                            status="danger"
-                            class="delete-btn"
-                            @click.stop="handleDelete(index)"
-                        >
-                            <template #icon>
-                                <icon-delete />
-                            </template>
-                        </a-button>
+                        <!-- 编辑模式 -->
+                        <div v-if="editingIndex === index" class="edit-mode">
+                            <a-input
+                                v-model="editingName"
+                                size="small"
+                                class="edit-input"
+                                @press-enter="handleRenameSubmit(index)"
+                                @blur="handleRenameCancel"
+                                auto-focus
+                            />
+                        </div>
+                        <!-- 显示模式 -->
+                        <div v-else class="menu-item-title">{{ item }}</div>
+                        <!-- 按钮组 -->
+                        <div v-show="hoverIndex === index && editingIndex !== index" class="button-group">
+                            <a-button
+                                type="text"
+                                size="small"
+                                class="edit-btn"
+                                @click.stop="handleRename(index)"
+                            >
+                                <template #icon>
+                                    <icon-edit />
+                                </template>
+                            </a-button>
+                            <a-button
+                                type="text"
+                                size="small"
+                                status="danger"
+                                class="delete-btn"
+                                @click.stop="handleDelete(index)"
+                            >
+                                <template #icon>
+                                    <icon-delete />
+                                </template>
+                            </a-button>
+                        </div>
                     </div>
                 </a-menu-item>
             </a-menu>
@@ -168,10 +219,25 @@ const handleHelp = () => {
     transition: all 0.2s ease;
 }
 
+.edit-mode {
+    flex: 1;
+}
+
+.edit-input {
+    width: 100%;
+}
+
+.button-group {
+    display: flex;
+    flex-shrink: 0;
+    gap: 4px;
+}
+
+.edit-btn,
 .delete-btn {
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 
 .arco-menu .arco-menu-item .arco-icon {
@@ -183,6 +249,7 @@ const handleHelp = () => {
   color: var(--danger-6);
 }
 
+.arco-menu-item:hover .edit-btn,
 .arco-menu-item:hover .delete-btn {
   opacity: 1;
 }

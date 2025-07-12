@@ -71,6 +71,15 @@ impl AppState {
         }
     }
 
+    pub fn rename_record(&mut self, index: usize, name: String) -> bool {
+        if let Some(record) = self.record_history.get_mut(index) {
+            record.set_name(name);
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn clear_history(&mut self, app: &AppHandle) {
         self.record_history.clear();
         self.current_index = None;

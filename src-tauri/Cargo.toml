@@ -1,6 +1,6 @@
 [package]
 name = "pold"
-version = "0.2.1"
+version = "0.2.2"
 description = "A Tauri App"
 authors = ["Skitta Chen <skittachen@gmail.com>"]
 edition = "2021"
